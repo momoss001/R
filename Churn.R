@@ -1,5 +1,5 @@
 #读入Churn数据集
-churn <- read.csv(file="D:/gitProjects/R/DMPA_data_sets/Data sets/churn.txt",stringsAsFactors = TRUE)
+churn <- read.csv(file="D:/project/R/DMPA_data_sets/Data sets/churn.txt",stringsAsFactors = TRUE)
 #显示前10条记录
 churn[1:10,]
 
@@ -75,4 +75,54 @@ plot(churn$Eve.Mins,churn$Day.Mins,xlim=c(0,400), ylim = c(0,400), xlab="Evening
     col=ifelse(churn$Churn.=="True.","red","blue")) 
 legend("topright", c("True","False"), col = c("red","blue"),pch = 1, title = "Churn")
 
-#u
+#白天使用时长和客户服务电话量的散点图，将客户流失着色
+plot(churn$Day.Mins, churn$CustServ.Calls,xlim = c(0,400), xlab = "day minutes",ylab = "customer service calls",
+     main=" sactterplot of day minutes and customer service calls by churn", col=ifelse(churn$Churn.=="True.","red","blue"),
+     pch=ifelse(churn$Churn.=="True.",16,20))
+legend("topright", c("True","False"), col = c("red","blue"),pch = c(16,20), title = "Churn")
+
+#散点图矩阵
+pairs(~churn$Day.Mins+
+      churn$Day.Calls+
+        churn$Day.Charge,data= churn)
+
+#白天费用和白天使用时长的回归分析 
+fit <- lm(churn$Day.Charge ~ churn$Day.Mins)
+fit
+summary(fit)
+
+#相关值和p-值
+
+days <- cbind(churn$Day.Mins,churn$Day.Calls,churn$Day.Charge)
+days
+
+MinsCallsTest <- cor.test(churn$Day.Mins,churn$Day.Calls)
+MinsChargeTest <- cor.test(churn$Day.Mins,churn$Day.Charge)
+ChargeCallsTest <- cor.test(churn$Day.Charge,churn$Day.Calls)
+round(cor(days),4)
+
+MinsCallsTest$p.value
+MinsChargeTest$p.value
+ChargeCallsTest$p.value
+
+
+#相关值和p值以矩阵形式体现
+#收集感兴趣的变量
+corrdata <- cbind(churn$Account.Length,churn$VMail.Message,churn$Day.Mins,churn$Day.Calls,churn$CustServ.Calls)
+#声明矩阵
+corrpvalues <- matrix(rep(0,25), ncol = 5)
+
+corrpvalues
+
+corrdata
+#使用相关系数填充矩阵
+for(i in 1:4){
+  for(j in (i+1):5){
+    corrpvalues[i,j] <-
+    corrpvalues[j,i] <-
+      round(cor.test(corrdata[,i],corrdata[,j])$p.value)
+  }
+}
+
+round(cor(corrdata),4)
+corrpvalues
